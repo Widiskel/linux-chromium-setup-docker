@@ -1,9 +1,7 @@
 #!/bin/bash
 
 curl -s https://raw.githubusercontent.com/Widiskel/Widiskel/refs/heads/main/show_logo.sh | bash
-sleep 2
-
-sleep 2
+sleep 3
 
 if ! command -v docker &> /dev/null; then
     echo "Installing Docker..."
