@@ -35,7 +35,7 @@ fi
 echo "Setting up Chromium USER & PASSWORD..."
 read -p "Enter a custom username: " CUSTOM_USER
 read -s -p "Enter a custom password: " CUSTOM_PASSWORD
-echo "USER|PASS: $CUSTOM_USER | $CUSTOM_PASSWORD"
+echo "Username Set to $CUSTOM_USER, user password from previous step"
 read -p "Enter a HTTP PORT You want to use (ex: 3010, default 3010 enter to continue): " CUSTOM_HTTP_PORT
 CUSTOM_HTTP_PORT=${CUSTOM_HTTP_PORT:-3010} 
 read -p "Enter a HTTPS PORT You want to use (ex: 3011, default 3011 enter to continue): " CUSTOM_HTTPS_PORT
@@ -44,8 +44,8 @@ echo "HTTP PORT|HTTPS PORT: $CUSTOM_HTTP_PORT | $CUSTOM_HTTPS_PORT"
 read -p "Enter Proxy you want to use for this browser (ex: PROXYHOST:PROXYPORT ,default no proxy): " PROXY
 PROXY=${PROXY:-""} 
 if [[ "$PROXY" != "" ]]; then
-    HTTPPROXY=$PROXY
-    HTTPSPROXY=$PROXY
+    HTTPPROXY="http://$PROXY"
+    HTTPSPROXY="https://$PROXY"
 else
     HTTPPROXY=""
     HTTPSPROXY=""
@@ -73,28 +73,29 @@ EOF
 
 cat <<EOF | sudo tee docker-compose.yaml
 ---
+version: '3'
 services:
   chromium:
     image: lscr.io/linuxserver/chromium:latest
-    container_name: \$CONTAINERNAME
+    container_name: ${CONTAINERNAME}
     security_opt:
       - seccomp:unconfined
     environment:
-      - CUSTOM_USER=\$CUSTOM_USER
-      - PASSWORD=\$PASSWORD
+      - CUSTOM_USER=${CUSTOM_USER}
+      - PASSWORD=${PASSWORD}
       - PUID=1000
       - PGID=1000
-      - TZ=\$TIMEZONE
+      - TZ=${TIMEZONE}
       - LANG=en_US.UTF-8
       - CHROME_CLI=https://google.com/
-      - HTTP_PROXY=\${HTTPPROXY}
-      - HTTPS_PROXY=\${HTTPSPROXY}
+      - HTTP_PROXY=${HTTPPROXY}
+      - HTTPS_PROXY=${HTTPSPROXY}
       - NO_PROXY=localhost,127.0.0.1
     volumes:
-      - \$HOME/${CONTAINERNAME}/config:/config
+      - ${HOME}/${CONTAINERNAME}/config:/config
     ports:
-      - \$CUSTOM_HTTP_PORT:3000
-      - \$CUSTOM_HTTPS_PORT:3001
+      - ${CUSTOM_HTTP_PORT}:3000
+      - ${CUSTOM_HTTPS_PORT}:3001
     shm_size: "1gb"
     restart: unless-stopped
 EOF
