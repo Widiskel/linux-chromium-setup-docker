@@ -60,7 +60,7 @@ echo "Container Name: $CONTAINERNAME"
 echo "Setting up Chromium with Docker Compose..."
 mkdir -p $HOME/chromium && cd $HOME/chromium
 
-cat <<EOF > .env
+cat <<EOF | sudo tee .env
 CUSTOM_USER=$CUSTOM_USER
 PASSWORD=$CUSTOM_PASSWORD
 TIMEZONE=$TIMEZONE
@@ -71,7 +71,7 @@ HTTPSPROXY=$HTTPSPROXY
 CONTAINERNAME=$CONTAINERNAME
 EOF
 
-cat <<EOF > docker-compose.yaml
+cat <<EOF | sudo tee docker-compose.yaml
 ---
 services:
   chromium:
@@ -109,7 +109,7 @@ cd $HOME/chromium
 docker-compose up -d
 
 IPVPS=$(curl -s ifconfig.me)
-cat <<EOF > credentials.txt
+cat <<EOF | sudo tee credentials.txt
 ---
 USERNAME : $CUSTOM_USER
 PASSWORD : $CUSTOM_PASSWORD
