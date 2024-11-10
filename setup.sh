@@ -75,7 +75,7 @@ cat <<EOF | sudo tee docker-compose.yaml
 ---
 version: '3'
 services:
-  chromium:
+  ${CONTAINERNAME}:
     image: lscr.io/linuxserver/chromium:latest
     container_name: ${CONTAINERNAME}
     security_opt:
