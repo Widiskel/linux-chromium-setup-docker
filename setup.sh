@@ -36,30 +36,65 @@ echo "Setting up Chromium USER & PASSWORD..."
 read -p "Enter a custom username: " CUSTOM_USER
 read -s -p "Enter a custom password: " CUSTOM_PASSWORD
 echo "USER|PASS: $CUSTOM_USER | $CUSTOM_PASSWORD"
+read -p "Enter a HTTP PORT You want to use (ex: 3010, default 3010 enter to continue): " CUSTOM_HTTP_PORT
+CUSTOM_HTTP_PORT=${CUSTOM_HTTP_PORT:-3010} 
+read -p "Enter a HTTPS PORT You want to use (ex: 3011, default 3011 enter to continue): " CUSTOM_HTTPS_PORT
+CUSTOM_HTTPS_PORT=${CUSTOM_HTTPS_PORT:-3011}
+echo "HTTP PORT|HTTPS PORT: $CUSTOM_HTTP_PORT | $CUSTOM_HTTPS_PORT"
+read -p "Enter Proxy you want to use for this browser (ex: PROXYHOST:PROXYPORT ,default no proxy): " PROXY
+PROXY=${PROXY:-""} 
+if [[ "$PROXY" != "" ]]; then
+    HTTPPROXY=$PROXY
+    HTTPSPROXY=$PROXY
+else
+    HTTPPROXY=""
+    HTTPSPROXY=""
+fi
+echo "HTTPPROXY|HTTPSPROXY: $HTTPPROXY|$HTTPSPROXY"
+
+
+read -p "This app will running using docker container, Enter container name (ex : chromium-1, default chromium enter to continue): " CONTAINERNAME
+CONTAINERNAME=${CONTAINERNAME:-chromium} 
+echo "Container Name: $CONTAINERNAME"
 
 echo "Setting up Chromium with Docker Compose..."
 mkdir -p $HOME/chromium && cd $HOME/chromium
+
+cat <<EOF > .env
+CUSTOM_USER=$CUSTOM_USER
+PASSWORD=$CUSTOM_PASSWORD
+TIMEZONE=$TIMEZONE
+CUSTOM_HTTP_PORT=$CUSTOM_HTTP_PORT
+CUSTOM_HTTPS_PORT=$CUSTOM_HTTPS_PORT
+HTTPPROXY=$HTTPPROXY
+HTTPSPROXY=$HTTPSPROXY
+CONTAINERNAME=$CONTAINERNAME
+EOF
+
 cat <<EOF > docker-compose.yaml
 ---
 services:
   chromium:
     image: lscr.io/linuxserver/chromium:latest
-    container_name: chromium
+    container_name: \$CONTAINERNAME
     security_opt:
       - seccomp:unconfined
     environment:
-      - CUSTOM_USER=$CUSTOM_USER
-      - PASSWORD=$CUSTOM_PASSWORD
+      - CUSTOM_USER=\$CUSTOM_USER
+      - PASSWORD=\$PASSWORD
       - PUID=1000
       - PGID=1000
-      - TZ=$TIMEZONE
+      - TZ=\$TIMEZONE
       - LANG=en_US.UTF-8
       - CHROME_CLI=https://google.com/
+      - HTTP_PROXY=\${HTTPPROXY}
+      - HTTPS_PROXY=\${HTTPSPROXY}
+      - NO_PROXY=localhost,127.0.0.1
     volumes:
-      - /root/chromium/config:/config
+      - \$HOME/chromium/config:/config
     ports:
-      - 3010:3000
-      - 3011:3001
+      - \$CUSTOM_HTTP_PORT:3000
+      - \$CUSTOM_HTTPS_PORT:3001
     shm_size: "1gb"
     restart: unless-stopped
 EOF
@@ -74,15 +109,19 @@ cd $HOME/chromium
 docker-compose up -d
 
 IPVPS=$(curl -s ifconfig.me)
-
-echo "Chromium container running, access it on: http://$IPVPS:3010/ or https://$IPVPS:3011/"
-echo "Username: $CUSTOM_USER"
-echo "Password: $CUSTOM_PASSWORD"
 cat <<EOF > credentials.txt
 ---
 USERNAME : $CUSTOM_USER
 PASSWORD : $CUSTOM_PASSWORD
-ACCESS   : http://$IPVPS:3010/ or https://$IPVPS:3011/
+ACCESS   : http://$IPVPS:$CUSTOM_HTTP_PORT/ or https://$IPVPS:$CUSTOM_HTTPS_PORT/
 EOF
 
 echo "Chromium Docker Setup Complete..."
+echo "Chromium container running, access it on: http://$IPVPS:$CUSTOM_HTTP_PORT/ or https://$IPVPS:$CUSTOM_HTTPS_PORT/"
+echo "Username: $CUSTOM_USER"
+echo "Password: $CUSTOM_PASSWORD"
+echo "How to access : "
+echo "1. Open access url"
+echo "2. Enter Username and Password"
+echo "3. If you use proxy and it need auth, you will be asked for enting username and password"
+echo "4. Done and LFG"
