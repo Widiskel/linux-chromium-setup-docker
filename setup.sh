@@ -106,7 +106,7 @@ if [ ! -f "docker-compose.yaml" ]; then
 fi
 
 echo "Starting Chromium Container..."
-cd $HOME/chromium
+cd $HOME/$CONTAINERNAME
 docker-compose up -d
 
 IPVPS=$(curl -s ifconfig.me)
