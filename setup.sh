@@ -58,7 +58,7 @@ CONTAINERNAME=${CONTAINERNAME:-chromium}
 echo "Container Name: $CONTAINERNAME"
 
 echo "Setting up Chromium with Docker Compose..."
-mkdir -p $HOME/chromium && cd $HOME/chromium
+mkdir -p $HOME/$CONTAINERNAME && cd $HOME/$CONTAINERNAME
 
 cat <<EOF | sudo tee .env
 CUSTOM_USER=$CUSTOM_USER
@@ -91,7 +91,7 @@ services:
       - HTTPS_PROXY=\${HTTPSPROXY}
       - NO_PROXY=localhost,127.0.0.1
     volumes:
-      - \$HOME/chromium/config:/config
+      - \$HOME/${CONTAINERNAME}/config:/config
     ports:
       - \$CUSTOM_HTTP_PORT:3000
       - \$CUSTOM_HTTPS_PORT:3001
